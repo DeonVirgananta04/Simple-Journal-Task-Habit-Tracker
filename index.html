@@ -6,13 +6,16 @@
     <title>Task, Habit & Notes Tracker</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-        body { font-family: sans-serif; background: #121212; color: #e0e0e0; margin: 20px; }
+        body { font-family: sans-serif; background: #121212; color: #e0e0e0; margin: 15px; }
         .container { max-width: 850px; margin: 0 auto; }
         
-        .tab-nav { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
-        .tab-btn { background: transparent; border: none; color: #888; font-size: 16px; padding: 10px 20px; cursor: pointer; border-radius: 4px; font-weight: bold; transition: 0.2s; }
+        /* Navigasi Tab - Dibuat scrollable untuk mobile */
+        .tab-nav { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
+        .tab-nav::-webkit-scrollbar { display: none; }
+        .tab-btn { background: transparent; border: none; color: #888; font-size: 15px; padding: 10px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; transition: 0.2s; flex-shrink: 0; }
         .tab-btn:hover { color: #fff; background: #252525; }
         .tab-btn.active { color: #fff; background: #333; border-bottom: 3px solid #007acc; }
+        
         .view-section { display: none; } 
         .view-section.active { display: block; } 
         
@@ -20,31 +23,37 @@
         .section-header-habit { color: #4caf50; border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 10px; }
         .section-header-task { color: #2196f3; border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 10px; margin-top: 25px; }
         
-        input, textarea, select, button { padding: 8px; background: #2d2d2d; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box; }
+        input, textarea, select, button { padding: 10px; background: #2d2d2d; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
         textarea { resize: vertical; min-height: 100px; font-family: monospace; }
-        button { cursor: pointer; background: #007acc; border: 1px solid transparent; }
+        button { cursor: pointer; background: #007acc; border: 1px solid transparent; font-weight: bold; }
         button:disabled { opacity: 0.5; cursor: not-allowed; }
         
         .btn-habit { background: #2e7d32; }
         .btn-task { background: #1565c0; }
-        .btn-danger { background: #c62828; border-color: #b71c1c; }
-        .btn-edit { background: #f57c00; border-color: #e65100; }
-        .btn-archive { background: #607d8b; border-color: #455a64; color: white; }
+        .btn-danger { background: #c62828; border-color: #b71c1c; font-weight: normal; }
+        .btn-edit { background: #f57c00; border-color: #e65100; font-weight: normal; }
+        .btn-archive { background: #607d8b; border-color: #455a64; color: white; font-weight: normal; }
         .btn-secondary { background: #444; border-color: #555; }
-        .btn-small { font-size: 11px; padding: 4px 8px; }
-        .action-group { display: flex; gap: 10px; margin-top: 10px; }
+        .btn-small { font-size: 11px; padding: 6px 10px; }
+        .action-group { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
         
-        .task-item { margin: 10px 0; background: #252525; padding: 10px; border-radius: 4px; border-left: 3px solid #444; }
+        /* RESPONSIVE INPUT GROUPS */
+        .input-group { display: flex; gap: 10px; margin-bottom: 15px; align-items: flex-end; }
+        .input-col { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+        .input-col input { width: 100%; }
+        
+        .task-item { margin: 10px 0; background: #252525; padding: 12px; border-radius: 4px; border-left: 4px solid #444; }
         .border-habit { border-left-color: #4caf50; }
         .border-task { border-left-color: #2196f3; }
-        .border-overdue { border-left-color: #c62828 !important; background: #2c1c1c; } /* Style untuk task yang telat */
+        .border-overdue { border-left-color: #c62828 !important; background: #2c1c1c; }
         .item-archived { opacity: 0.6; filter: grayscale(80%); }
         
-        .task-header { display: flex; align-items: center; justify-content: space-between; font-weight: bold; }
-        .task-actions { display: flex; gap: 5px; }
-        .subtask-list { margin-top: 8px; margin-left: 20px; border-left: 1px dashed #555; padding-left: 10px; }
-        .subtask-item { display: flex; align-items: center; justify-content: space-between; margin: 4px 0; font-size: 14px; }
+        .task-header { display: flex; align-items: center; justify-content: space-between; font-weight: bold; gap: 10px; }
+        .task-actions { display: flex; gap: 5px; flex-wrap: wrap; }
+        .subtask-list { margin-top: 10px; margin-left: 10px; border-left: 2px dashed #444; padding-left: 10px; }
+        .subtask-item { display: flex; align-items: center; justify-content: space-between; margin: 6px 0; font-size: 14px; gap: 10px; }
         
+        /* Heatmap */
         .heatmap-wrapper { overflow-x: auto; padding-bottom: 10px; }
         .heatmap-grid { display: grid; grid-template-rows: repeat(7, 1fr); grid-auto-flow: column; gap: 4px; width: max-content; }
         .heatmap-cell { width: 12px; height: 12px; border-radius: 2px; background: #2d2d2d; position: relative; cursor: crosshair; }
@@ -62,20 +71,20 @@
         .dot-habit { background: #2e7d32; color: #fff; }
         .dot-task { background: #1565c0; color: #fff; }
         .dot-fail { background: #b71c1c; color: #fff; }
-        .status-badge { font-size: 10px; padding: 2px 4px; border-radius: 2px; background: #555; margin-left: 10px; }
+        
+        .status-badge { font-size: 10px; padding: 3px 6px; border-radius: 3px; background: #555; margin-left: 5px; white-space: nowrap; }
         .status-done { background: #2e7d32; }
-        .type-badge { font-size: 10px; padding: 2px 4px; border-radius: 2px; margin-right: 5px; }
+        .type-badge { font-size: 10px; padding: 3px 6px; border-radius: 3px; margin-right: 5px; white-space: nowrap; }
         .badge-habit { background: #4caf50; color: #000; }
         .badge-task { background: #2196f3; color: #fff; }
         .badge-overdue { background: #c62828; color: #fff; }
         .badge-archived { background: #757575; color: #fff; }
         .empty-state { font-size: 13px; color: #888; font-style: italic; margin-top: 10px; }
 
-        .note-form { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
         .filter-bar { display: flex; gap: 10px; margin-bottom: 15px; align-items: center; }
         .note-card { background: #252525; padding: 15px; border-radius: 6px; margin: 10px 0; border-top: 4px solid #007acc; }
-        .note-meta { font-size: 11px; color: #888; display: flex; justify-content: space-between; margin-bottom: 10px; margin-top: 5px; }
-        .note-body { font-size: 14px; line-height: 1.5; color: #d0d0d0; background: #1a1a1a; padding: 10px; border-radius: 4px; border: 1px solid #333; margin-top: 10px; }
+        .note-meta { font-size: 11px; color: #888; display: flex; justify-content: space-between; margin-bottom: 10px; margin-top: 8px; flex-wrap: wrap; gap: 5px; }
+        .note-body { font-size: 14px; line-height: 1.6; color: #d0d0d0; background: #1a1a1a; padding: 12px; border-radius: 4px; border: 1px solid #333; margin-top: 10px; overflow-x: auto; }
         .note-body p { margin: 4px 0; }
         .note-body code { background: #333; padding: 2px 4px; border-radius: 3px; font-family: monospace; color: #ff8a80; }
         .note-body pre { background: #111; padding: 10px; border-radius: 4px; overflow-x: auto; border: 1px solid #222; }
@@ -83,6 +92,27 @@
         .note-header-clickable { cursor: pointer; user-select: none; transition: opacity 0.2s; }
         .note-header-clickable:hover { opacity: 0.8; }
         .note-toggle-icon { font-size: 12px; margin-right: 5px; display: inline-block; transition: transform 0.2s; }
+
+        /* --- MEDIA QUERIES UNTUK MOBILE (MAX-WIDTH 600px) --- */
+        @media (max-width: 600px) {
+            body { margin: 10px; }
+            .section { padding: 15px; }
+            
+            /* Mengubah baris input menjadi susunan vertikal */
+            .input-group { flex-direction: column; align-items: stretch; gap: 8px; }
+            .input-group > * { width: 100% !important; flex: none !important; margin: 0 !important; }
+            .input-col { gap: 2px; margin-bottom: 5px; }
+            
+            /* Menyesuaikan jarak header task agar tombol tidak terpotong */
+            .task-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .task-actions { align-self: stretch; justify-content: flex-end; }
+            
+            .subtask-item { flex-direction: column; align-items: flex-start; }
+            .subtask-item .task-actions { align-self: flex-end; }
+            
+            .note-header-clickable { flex-direction: column; align-items: flex-start; }
+            .note-header-clickable > div { width: 100%; margin-bottom: 10px; }
+        }
     </style>
 </head>
 <body>
@@ -110,7 +140,7 @@
             <div class="heatmap-legend">
                 <div class="legend-item"><div class="legend-box heat-none"></div> No habits</div>
                 <div class="legend-item"><div class="legend-box heat-some"></div> Some habits</div>
-                <div class="legend-item"><div class="legend-box heat-all"></div> All habits completed</div>
+                <div class="legend-item"><div class="legend-box heat-all"></div> All completed</div>
             </div>
         </div>
 
@@ -120,8 +150,8 @@
         </div>
         
         <div class="action-group">
-            <button onclick="exportData()">Backup Data (JSON)</button>
-            <button class="btn-secondary" onclick="document.getElementById('importInput').click()">Import Data</button>
+            <button onclick="exportData()" style="flex: 1;">Backup (JSON)</button>
+            <button class="btn-secondary" onclick="document.getElementById('importInput').click()" style="flex: 1;">Import</button>
             <input type="file" id="importInput" accept=".json" style="display: none;" onchange="importData(this)">
         </div>
     </div>
@@ -129,19 +159,23 @@
     <div id="view-manage" class="view-section">
         <div class="section">
             <h3>Tambah Kegiatan Baru</h3>
-            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                <input type="text" id="habitInput" placeholder="Nama Habit (Harian)..." style="flex: 1;">
+            
+            <div class="input-group">
+                <input type="text" id="habitInput" placeholder="Nama Habit (Harian)...">
                 <button class="btn-habit" onclick="addItem('habit')">+ Tambah Habit</button>
             </div>
-            <div style="display: flex; gap: 10px; margin-bottom: 15px; align-items: center;">
-                <input type="text" id="taskInput" placeholder="Nama Task (Sekali Selesai)..." style="flex: 2;">
-                <div style="display:flex; flex:1; flex-direction:column; gap:2px;">
-                    <label style="font-size:10px; color:#aaa;">Tenggat Waktu (Opsional):</label>
-                    <input type="date" id="taskDeadline" style="width:100%;">
+            
+            <div class="input-group">
+                <input type="text" id="taskInput" placeholder="Nama Task (Sekali Selesai)...">
+                <div class="input-col">
+                    <label style="font-size:11px; color:#aaa;">Tenggat Waktu (Opsional):</label>
+                    <input type="date" id="taskDeadline">
                 </div>
-                <button class="btn-task" onclick="addItem('task')" style="height:38px; margin-top:12px;">+ Tambah Task</button>
+                <button class="btn-task" onclick="addItem('task')">+ Tambah Task</button>
             </div>
-            <hr style="border: 1px solid #333; margin: 20px 0;">
+            
+            <hr style="border: 1px solid #333; margin: 25px 0;">
+            
             <h4 class="section-header-habit">Daftar Seluruh Habit</h4>
             <div id="manageHabitList"></div>
             <h4 class="section-header-task">Daftar Seluruh Task</h4>
@@ -152,22 +186,24 @@
     <div id="view-notes" class="view-section">
         <div class="section">
             <h3>Buat Catatan Jurnal Baru (.md)</h3>
-            <div class="note-form">
-                <div style="display: flex; gap: 10px;">
-                    <input type="text" id="noteTitle" placeholder="Judul Catatan..." style="flex: 2;">
-                    <input type="text" id="noteCategory" list="categoryList" placeholder="Kategori (Pilih / Ketik Baru)..." style="flex: 1;">
-                    <datalist id="categoryList"></datalist>
-                </div>
-                <textarea id="noteContent" placeholder="Isi catatan (Mendukung format Markdown seperti # Heading, **Bold**, `code`...)"></textarea>
-                <button onclick="addNote()" style="width: max-content; padding: 8px 20px;">Simpan Catatan</button>
+            
+            <div class="input-group">
+                <input type="text" id="noteTitle" placeholder="Judul Catatan..." style="flex: 2;">
+                <input type="text" id="noteCategory" list="categoryList" placeholder="Kategori (Pilih / Ketik Baru)..." style="flex: 1;">
+                <datalist id="categoryList"></datalist>
             </div>
+            
+            <div style="margin-bottom: 15px;">
+                <textarea id="noteContent" style="width: 100%;" placeholder="Isi catatan (Mendukung format Markdown seperti # Heading, **Bold**, `code`...)"></textarea>
+            </div>
+            <button onclick="addNote()" style="width: 100%;">Simpan Catatan</button>
         </div>
 
         <div class="section">
             <h3>Riwayat Catatan</h3>
             <div class="filter-bar">
-                <label for="categoryFilter">Filter Kategori:</label>
-                <select id="categoryFilter" onchange="renderNotes()"><option value="ALL">Semua Kategori</option></select>
+                <label for="categoryFilter" style="font-size: 14px;">Filter:</label>
+                <select id="categoryFilter" style="flex: 1;" onchange="renderNotes()"><option value="ALL">Semua Kategori</option></select>
             </div>
             <div id="notesContainer"></div>
         </div>
@@ -185,7 +221,6 @@
         data.notes = [];
     }
 
-    // Normalisasi struktur data lama agar kompatibel dengan parameter deadline
     data.items.forEach(item => {
         if (item.type === 'task' && item.deadline === undefined) item.deadline = null;
         if (!item.createdAt) {
@@ -216,7 +251,7 @@
         if (type === 'task') {
             const deadlineInput = document.getElementById('taskDeadline');
             if (deadlineInput.value) deadlineVal = deadlineInput.value;
-            deadlineInput.value = ''; // Reset input date
+            deadlineInput.value = ''; 
         }
         
         data.items.push({ 
@@ -226,7 +261,7 @@
             subtasks: [], 
             createdAt: todayStr, 
             archivedAt: null,
-            deadline: deadlineVal // Simpan nilai deadline
+            deadline: deadlineVal
         });
         input.value = ''; save();
     }
@@ -281,6 +316,7 @@
     }
 
     function deleteNote(noteId) { if (confirm("Hapus catatan ini secara permanen?")) { data.notes = data.notes.filter(n => n.id !== noteId); save(); } }
+    
     function editNote(noteId) {
         const note = data.notes.find(n => n.id === noteId);
         const newContent = prompt("Edit Isi Catatan (Markdown teks mentah):", note.content);
@@ -317,16 +353,15 @@
         return false;
     }
 
-    // --- RENDERING MANAGEMENT ---
     function renderManageItems(itemsList) {
         if (itemsList.length === 0) return `<div class="empty-state">Belum ada kegiatan di kategori ini.</div>`;
         return itemsList.map(p => {
             const isArchived = p.archivedAt !== null;
-            const deadlineLabel = (p.type === 'task' && p.deadline) ? `<span style="font-size:11px; margin-left:10px; color:#aaa;">📅 Deadline: ${p.deadline}</span>` : '';
+            const deadlineLabel = (p.type === 'task' && p.deadline) ? `<span style="font-size:11px; margin-left:10px; color:#aaa; white-space:nowrap;">📅 Deadline: ${p.deadline}</span>` : '';
             return `
             <div class="task-item ${p.type === 'habit' ? 'border-habit' : 'border-task'} ${isArchived ? 'item-archived' : ''}">
                 <div class="task-header">
-                    <div>
+                    <div style="line-height: 1.4;">
                         <span class="type-badge ${p.type === 'habit' ? 'badge-habit' : 'badge-task'}">${p.type.toUpperCase()}</span>
                         ${isArchived ? `<span class="type-badge badge-archived">ARSIP</span>` : ''} 
                         <b>${p.title}</b>
@@ -340,7 +375,7 @@
                 </div>
                 <div class="subtask-list">
                     ${p.subtasks.map(s => `<div class="subtask-item"><span>- ${s.title}</span><div class="task-actions">${!isArchived ? `<button class="btn-edit btn-small" onclick="editItem('${s.id}', true, '${p.id}')">Edit</button><button class="btn-danger btn-small" onclick="deleteItem('${s.id}', true, '${p.id}')">x</button>` : ''}</div></div>`).join('')}
-                    ${!isArchived ? `<div style="margin-top: 5px; display:flex; gap:5px;"><input type="text" id="subInput_${p.id}" placeholder="+ Subtask..." style="font-size: 11px; padding: 4px;"><button class="btn-small" onclick="addSubtask('${p.id}')">Tambah</button></div>` : ''}
+                    ${!isArchived ? `<div class="input-group" style="margin-top: 8px; margin-bottom: 0;"><input type="text" id="subInput_${p.id}" placeholder="+ Subtask..." style="font-size: 13px; padding: 6px;"><button class="btn-small" onclick="addSubtask('${p.id}')">Tambah</button></div>` : ''}
                 </div>
             </div>`;
         }).join('');
@@ -352,24 +387,22 @@
         
         return visibleItems.map(p => {
             const isParentDone = getParentStatus(p, todayStr);
-            
-            // LOGIKA MITIGASI DEADLINE: Jika lewat hari H DAN belum p.subtasks / parent selesai -> tandai overdue (merah)
             const isOverdue = p.type === 'task' && p.deadline && p.deadline < todayStr && !isParentDone;
             
             const borderClass = isOverdue ? 'border-overdue' : (p.type === 'habit' ? 'border-habit' : 'border-task');
             const typeBadgeClass = p.type === 'habit' ? 'badge-habit' : 'badge-task';
             const typeLabel = p.type === 'habit' ? 'HABIT' : 'TASK';
-            const deadlineLabel = (p.type === 'task' && p.deadline) ? `<span style="font-size:11px; margin-left:8px; color:${isOverdue ? '#ff8a80':'#999'};">⚠️ Limit: ${p.deadline}</span>` : '';
+            const deadlineLabel = (p.type === 'task' && p.deadline) ? `<span style="font-size:11px; margin-left:8px; color:${isOverdue ? '#ff8a80':'#999'}; white-space:nowrap;">⚠️ Limit: ${p.deadline}</span>` : '';
 
             let html = `<div class="task-item ${borderClass}"><div class="task-header">`;
             if (p.subtasks.length === 0) {
-                html += `<div><input type="checkbox" ${isParentDone ? 'checked' : ''} onchange="toggleTask('${p.id}')"> <span class="type-badge ${typeBadgeClass}">${typeLabel}</span> ${isOverdue ? `<span class="type-badge badge-overdue">TERLEWAT</span>` : ''} <b>${p.title}</b> ${deadlineLabel}</div>`;
+                html += `<div style="display:flex; align-items:center; gap:8px;"><input type="checkbox" style="transform: scale(1.2);" ${isParentDone ? 'checked' : ''} onchange="toggleTask('${p.id}')"> <div style="line-height:1.4;"><span class="type-badge ${typeBadgeClass}">${typeLabel}</span> ${isOverdue ? `<span class="type-badge badge-overdue">TERLEWAT</span>` : ''} <b>${p.title}</b> ${deadlineLabel}</div></div>`;
             } else {
-                html += `<div><span class="type-badge ${typeBadgeClass}">${typeLabel}</span> ${isOverdue ? `<span class="type-badge badge-overdue">TERLEWAT</span>` : ''} <b>${p.title}</b> ${deadlineLabel} <span class="status-badge ${isParentDone ? 'status-done' : ''}">${isParentDone ? 'SELESAI' : 'PENDING'}</span></div>`;
+                html += `<div style="line-height:1.4;"><span class="type-badge ${typeBadgeClass}">${typeLabel}</span> ${isOverdue ? `<span class="type-badge badge-overdue">TERLEWAT</span>` : ''} <b>${p.title}</b> ${deadlineLabel} <span class="status-badge ${isParentDone ? 'status-done' : ''}">${isParentDone ? 'SELESAI' : 'PENDING'}</span></div>`;
             }
             html += `</div>`;
             if (p.subtasks.length > 0) {
-                html += `<div class="subtask-list">${p.subtasks.map(s => `<div class="subtask-item" style="justify-content: flex-start; gap: 8px;"><input type="checkbox" ${isTaskDoneOnDate(s.id, todayStr) ? 'checked' : ''} onchange="toggleTask('${s.id}')"><span>${s.title}</span></div>`).join('')}</div>`;
+                html += `<div class="subtask-list">${p.subtasks.map(s => `<div class="subtask-item" style="justify-content: flex-start; gap: 10px;"><input type="checkbox" style="transform: scale(1.2);" ${isTaskDoneOnDate(s.id, todayStr) ? 'checked' : ''} onchange="toggleTask('${s.id}')"><span>${s.title}</span></div>`).join('')}</div>`;
             }
             html += `</div>`; return html;
         }).join('');
