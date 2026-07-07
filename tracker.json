@@ -1,0 +1,13 @@
+{
+  "tasks": [
+    { "id": "t1", "title": "Implementasi UI Dashboard", "active": true }
+  ],
+  "logbook": {
+    "2026-07-07": {
+      "t1": { "done": true, "note": "Selesai bagian CSS Grid" }
+    },
+    "2026-07-06": {
+      "t1": { "done": false, "note": "Stuck di fungsi localstorage" }
+    }
+  }
+}
